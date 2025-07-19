@@ -23,4 +23,4 @@ Build a **visual panel** (CLI or simple GUI) to:
 git clone https://github.com/your-username/linux-resource-monitor.git
 cd linux-resource-monitor
 make
-./monitor
+./panel
