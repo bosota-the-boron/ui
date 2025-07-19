@@ -1,6 +1,7 @@
 #include <ncurses.h>    // Bibliothèque pour gestion d'interface texte (fenêtres, couleurs, etc.)
-#include <string.h>     // Pour strlen, utilisé dans l'affichage de la barre
-#include "ui.h"         // Déclarations des fonctions d'interface (prototype, etc.)
+#include <string.h>    // Pour strlen, utilisé dans l'affichage de la barre
+
+#include "../include/ui.h"         // Déclarations des fonctions d'interface (prototype, etc.)
 
 // Initialise l'interface utilisateur ncurses
 void ui_init() {

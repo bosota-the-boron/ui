@@ -3,8 +3,8 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "ui.h"         // Interface utilisateur avec ncurses
-#include "processor.h"  // Fonctions pour lire /proc/stat et calculer l'usage CPU
+#include "include/ui.h"         // Interface utilisateur avec ncurses
+#include "include/processor.h"  // Fonctions pour lire /proc/stat et calculer l'usage CPU
 
 #define MAX_CORES 128   // Nombre max de cœurs supportés
 

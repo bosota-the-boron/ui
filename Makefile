@@ -3,7 +3,7 @@ CFLAGS = -Wall -Wextra -O2
 LDFLAGS = -lncurses
 
 TARGET = panel
-SRCS = main.c ui.c processor.c
+SRCS = main.c src/ui.c src/processor.c
 OBJS = $(SRCS:.c=.o)
 
 all: $(TARGET)

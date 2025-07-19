@@ -3,6 +3,8 @@
 #include <unistd.h>     // Pour usleep (pause en microsecondes)
 #include <string.h> 
 
+
+
 #define MAX_CORES 128
 
 // Structure pour stocker les compteurs cumulés CPU lus depuis /proc/stat
