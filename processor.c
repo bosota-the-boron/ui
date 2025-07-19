@@ -3,6 +3,8 @@
 #include <unistd.h>     // Pour usleep (pause en microsecondes)
 #include <string.h> 
 
+#define MAX_CORES 128
+
 // Structure pour stocker les compteurs cumulés CPU lus depuis /proc/stat
 typedef struct {
     unsigned long long user, nice, system, idle, iowait, irq, softirq, steal;
@@ -52,4 +54,37 @@ float calculate_cpu_usage(const cpu_stats_t *prev, const cpu_stats_t *curr) {
 
     // Calcul du ratio d'utilisation CPU sur la période mesurée
     return (float)(totald - idled) / (float)totald;
+}
+
+// Lire les stats pour tous les CPU (cpu total + cpu0, cpu1, ...)
+int read_all_cpu_stats(cpu_stats_t *stats_array, int *core_count) {
+    FILE *fp = fopen("/proc/stat", "r");
+    if (!fp) return -1;
+
+    char line[512];
+    int index = 0;
+
+    while (fgets(line, sizeof(line), fp)) {
+        if (strncmp(line, "cpu", 3) != 0)
+            break;  // On arrête dès qu'on ne lit plus une ligne commençant par "cpu"
+
+        if (index >= MAX_CORES + 1)
+            break;  // Évite dépassement
+
+        sscanf(line, "cpu%*s %llu %llu %llu %llu %llu %llu %llu %llu",
+               &stats_array[index].user,
+               &stats_array[index].nice,
+               &stats_array[index].system,
+               &stats_array[index].idle,
+               &stats_array[index].iowait,
+               &stats_array[index].irq,
+               &stats_array[index].softirq,
+               &stats_array[index].steal);
+
+        index++;
+    }
+
+    fclose(fp);
+    *core_count = index - 1;  // Le premier (index 0) est "cpu" global
+    return 0;
 }

@@ -1,46 +1,61 @@
-#include <stdio.h>      // Pour printf, fprintf, FILE*, fopen, fgets, sscanf, fclose
-#include <stdlib.h>     // Pour exit, malloc (non utilisé ici, mais souvent utile)
-#include <unistd.h>     // Pour usleep (pause en microsecondes)
-#include <string.h>     // Pour manipuler les chaînes (pas utilisé directement ici)
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
 
-#include "ui.h"         // Notre module personnalisé d'interface UI basé sur ncurses
-#include "processor.h"
+#include "ui.h"         // Interface utilisateur avec ncurses
+#include "processor.h"  // Fonctions pour lire /proc/stat et calculer l'usage CPU
 
+#define MAX_CORES 128   // Nombre max de cœurs supportés
 
-
-
-// Fonction principale (point d'entrée du programme)
 int main() {
-    cpu_stats_t prev_stats, curr_stats;  // Variables pour stocker deux lectures consécutives des stats CPU
+    cpu_stats_t prev_stats[MAX_CORES + 1], curr_stats[MAX_CORES + 1];
+    int core_count;
 
-    // Lecture initiale des stats CPU pour avoir une base de départ
-    if (read_cpu_stats(&prev_stats) != 0) {
-        fprintf(stderr, "Erreur lecture /proc/stat\n");   // Affiche un message d'erreur sur la sortie d'erreur standard
-        return 1;     // Quitte le programme avec code d'erreur 1
+    // Lecture initiale des stats CPU
+    if (read_all_cpu_stats(prev_stats, &core_count) != 0) {
+        fprintf(stderr, "Erreur : impossible de lire /proc/stat\n");
+        return 1;
     }
 
-    ui_init();  // Initialise l'interface utilisateur (ncurses, couleurs, etc.)
+    ui_init();  // Initialisation de l'interface ncurses
 
-    // Boucle infinie pour mettre à jour l'affichage toutes les 0,5 secondes
     while (1) {
-        usleep(500 * 1000);  // Pause de 500 millisecondes (usleep prend des microsecondes)
+        usleep(500 * 1000);  // Pause de 500 ms
 
-        // Lecture actuelle des stats CPU
-        if (read_cpu_stats(&curr_stats) != 0) {
-            break;  // En cas d'erreur lecture, quitte la boucle proprement
+        // Lire les stats actuelles
+        if (read_all_cpu_stats(curr_stats, &core_count) != 0) {
+            break;
         }
 
-        // Calcul du pourcentage d'utilisation CPU entre les deux lectures
-        float usage = calculate_cpu_usage(&prev_stats, &curr_stats);
+        ui_clear();  // Efface l'écran
 
-        ui_clear();  // Efface l'interface pour un nouvel affichage propre
-        ui_draw_bar(2, 2, 50, usage, "CPU Usage");  // Affiche une barre représentant l'utilisation CPU
-        ui_refresh(); // Rafraîchit l'écran pour appliquer les changements
+        int start_row = 2;
 
-        prev_stats = curr_stats;  // Met à jour prev_stats pour la prochaine mesure (mémorisation)
+        // Affiche l'utilisation totale du CPU
+        float usage_total = 0.0f;
+        for (int i = 1; i <= core_count; ++i) {
+            usage_total += calculate_cpu_usage(&prev_stats[i], &curr_stats[i]);
+        }
+        usage_total /= core_count;
+        ui_draw_bar(start_row, 2, 50, usage_total, "Total CPU");
+
+        // Affiche l'utilisation par cœur
+        for (int i = 1; i <= core_count; ++i) {
+            float usage_core = calculate_cpu_usage(&prev_stats[i], &curr_stats[i]);
+
+            char label[16];
+            snprintf(label, sizeof(label), "Core %-2d", i - 1);  // Ex: "Core 11"
+
+            ui_draw_bar(start_row + i, 2, 50, usage_core, label);
+        }
+
+        ui_refresh();  // Met à jour l'affichage
+
+        // Mise à jour pour le prochain tour
+        memcpy(prev_stats, curr_stats, sizeof(cpu_stats_t) * (core_count + 1));
     }
 
-    ui_deinit();  // Quitte proprement ncurses, restaurer terminal
-
-    return 0;     // Fin normale du programme
+    ui_deinit();  // Quitte proprement ncurses
+    return 0;
 }

@@ -28,31 +28,25 @@ void ui_clear() {
     clear();   // Efface le contenu de la fenêtre standard
 }
 
-// Affiche une barre horizontale avec un label, remplissage proportionnel à percent
-void ui_draw_bar(int x, int y, int width, float percent, const char *label) {
-    int filled = (int)(percent * width);  // Calcule combien de caractères sont remplis
+void ui_draw_bar(int y, int x, int width, float percent, const char *label) {
+    int filled = (int)(percent * width);
 
-    mvprintw(y, x, "%s [", label);  // Affiche le label suivi de "[" à la position (x,y)
+    mvprintw(y, x, "%-10s [", label);  // Aligne le label à gauche sur 10 caractères
 
-    attron(COLOR_PAIR(1));           // Active la couleur verte (couleur 1)
-
-    // Affiche les caractères remplis (#) en vert
+    attron(COLOR_PAIR(1));
     for (int i = 0; i < filled; i++) {
         addch('#');
     }
+    attroff(COLOR_PAIR(1));
 
-    attroff(COLOR_PAIR(1));          // Désactive la couleur verte
-
-    // Complète la barre avec des espaces pour la partie non remplie
     for (int i = filled; i < width; i++) {
         addch(' ');
     }
 
-    addch(']');                     // Ferme la barre avec un "]"
+    addch(']');
 
-    // Affiche le pourcentage à droite de la barre
-    // Position horizontale = x + largeur de la barre + longueur du label + 3 espaces
-    mvprintw(y, x + width + (int)strlen(label) + 3, " %.1f%%", percent * 100);
+    // Affiche le pourcentage juste après la barre
+    mvprintw(y, x + 12 + width, " %.1f%%", percent * 100);
 }
 
 // Rafraîchit l'écran pour appliquer toutes les modifications affichées
