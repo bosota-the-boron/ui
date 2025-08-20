@@ -20,7 +20,7 @@ Build a **visual panel** (CLI or simple GUI) to:
 ## 🚀 Installation
 
 ```bash
-git clone https://github.com/your-username/linux-resource-monitor.git
+git clone https://github.com/bosota-the-boron/ui/
 cd linux-resource-monitor
 make
 ./panel
